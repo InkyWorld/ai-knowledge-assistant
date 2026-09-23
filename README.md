@@ -1,1 +1,1 @@
-Day 1 — Project Initialization and First LLM API Call
+Day 2 — Message roles + history
