@@ -1,0 +1,1 @@
+Day 1 — Project Initialization and First LLM API Call
