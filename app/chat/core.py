@@ -1,10 +1,8 @@
-import os
-
 from anthropic import Anthropic
-from dotenv import load_dotenv
 
-load_dotenv()
-client = Anthropic(api_key=os.getenv("ANTHROPIC_MODEL", ""))
+from app.core.config import settings
+
+client = Anthropic(api_key=settings.anthropic_api_key)
 
 
 class ChatSession:
@@ -32,7 +30,7 @@ class ChatSession:
 
 
 if __name__ == "__main__":
-    chat = ChatSession()
+    chat = ChatSession(model=settings.anthropic_model)
     print("Chat initialized. Type 'exit' to quit.")
     while True:
         user_input = input("You: ")
