@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from anthropic import Anthropic
 
 from app.core.config import settings
@@ -27,6 +29,26 @@ class ChatSession:
 
         self.history.append({"role": "assistant", "content": assistant_text})
         return assistant_text
+    
+    def send_stream(self, user_message: str) -> Iterator[str]:
+        self.history.append({"role": "user", "content": user_message})
+
+        kwargs = {
+            "model": self.model,
+            "max_tokens": 1024,
+            "messages": self.history,
+        }
+        if self.system:
+            kwargs["system"] = self.system
+
+        assistant_text = ""
+        with client.messages.stream(**kwargs) as stream:
+            for chunk in stream.text_stream:
+                assistant_text += chunk
+                yield chunk
+
+        self.history.append({"role": "assistant", "content": assistant_text})
+
 
 
 if __name__ == "__main__":
@@ -36,4 +58,6 @@ if __name__ == "__main__":
         user_input = input("You: ")
         if user_input.lower() == "exit":
             break
-        print(chat.send(user_input))
+        for chunk in chat.send_stream(user_input):
+            print(chunk, end="", flush=True)
+        print()

@@ -50,7 +50,7 @@ if __name__ == "__main__":
     from pathlib import Path
 
     async def main() -> None:
-        input_path = Path("data/input.pdf")
+        input_path = Path("data/input/input.pdf")
         output_path = Path("data/output/output.md")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         client = AsyncAnthropic(api_key=settings.anthropic_api_key)
