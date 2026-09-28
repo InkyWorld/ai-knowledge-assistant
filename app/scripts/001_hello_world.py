@@ -8,7 +8,7 @@ load_dotenv()
 client = Anthropic()
 
 message = client.messages.create(
-    model=os.getenv("ANTROPIC_MODEL", ""),
+    model=os.getenv("ANTHROPIC_MODEL", ""),
     max_tokens=100,
     messages=[
         {
