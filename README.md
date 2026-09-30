@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 6 — Chunking
+> Day . — prompt engineering
 
 ## Local run
 
