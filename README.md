@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day . — prompt engineering
+> Day 6 — Chain-of-Thought (CoT)
 
 ## Local run
 
