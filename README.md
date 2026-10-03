@@ -1,7 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 6 — Chain-of-Thought (CoT)
-
+> Day 7 — embeddings
 ## Local run
 
 ```bash

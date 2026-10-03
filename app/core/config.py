@@ -7,5 +7,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-haiku-4-5"
 
+    google_api_key: str = ""
+    google_embedding_model: str = "gemini-embedding-2"
+
 
 settings = Settings()
