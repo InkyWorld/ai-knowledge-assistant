@@ -1,48 +1,40 @@
-import base64
+from pathlib import Path
 
+import pymupdf
 from anthropic import AsyncAnthropic
+from anthropic.types import TextBlock
 
 from app.core.config import settings
+from app.ingestion.cleaner import MarkdownCleaner
+from app.prompts.document_processor import PDF_TO_MARKDOWN_PROMPT
 
 
-async def parse_pdf_to_markdown(file_path: str, client: AsyncAnthropic) -> str:
+class DocumentProcessor:
+    def __init__(self, client: AsyncAnthropic, cleaner: MarkdownCleaner):
+        self.client = client
+        self.cleaner = cleaner
 
-    # Read the PDF file and encode its content as Base64
-    with open(file_path, "rb") as pdf_file:
-        pdf_content = pdf_file.read()
-        encoded_pdf = base64.b64encode(pdf_content).decode("utf-8")
+    def extract_text_from_pdf(self, file_path: Path) -> str:
+        """Витягує сирий текст з PDF локально, щоб уникнути галюцинацій Claude"""
+        doc = pymupdf.open(file_path)
+        text = ""
+        for page in doc.pages():
+            text += f"{page.get_text()}\n"
+        return text
 
-    # Build the system prompt
-    system_prompt = (
-        "Your task is to extract all text, tables, and data from this document "
-        "and return them in Markdown format without your own additions or comments."
-    )
+    async def process(self, file_path: Path) -> str:
+        raw_pdf_text = self.extract_text_from_pdf(file_path)
 
-    # Build the model request
-    response = await client.messages.create(
-        model=settings.anthropic_model,
-        system=system_prompt,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "document",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "application/pdf",
-                            "data": encoded_pdf,
-                        },
-                    }
-                ],
-            },
-        ],
-        max_tokens=5000,
-    )
+        response = await self.client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=8192,
+            messages=[{"role": "user", "content": f"{PDF_TO_MARKDOWN_PROMPT}\n\n<text>\n{raw_pdf_text}\n</text>"}],
+        )
+        if not response.content or not isinstance(response.content[0], TextBlock):
+            raise ValueError("Failed to process PDF text with the API.")
+        response_text = response.content[0].text
 
-    # Extract text from the model response
-    markdown_output = response.content[0].text
-    return markdown_output
+        return self.cleaner.clean(response_text)
 
 
 if __name__ == "__main__":
@@ -50,13 +42,17 @@ if __name__ == "__main__":
     from pathlib import Path
 
     async def main() -> None:
-        input_path = Path("data/input/input.pdf")
-        output_path = Path("data/output/output.md")
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        cleaner = MarkdownCleaner()
         client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-        markdown = await parse_pdf_to_markdown(str(input_path), client)
+        test_pdf_folder_input_path = Path("data/input/Про внесення змін до постанови КМУ")
+        test_pdf_folder_output_path = Path("data\\markdown\\Про внесення змін до постанови КМУ")
+        test_pdf_folder_output_path.mkdir(parents=True, exist_ok=True)
+        for input_path in test_pdf_folder_input_path.glob("*.pdf"):
+            output_file_path = test_pdf_folder_output_path / (input_path.stem + ".md")
+            processor = DocumentProcessor(client, cleaner)
+            markdown_text = await processor.process(input_path)
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(markdown)
+            with open(output_file_path, "w", encoding="utf-8") as f:
+                f.write(markdown_text)
 
     asyncio.run(main())
