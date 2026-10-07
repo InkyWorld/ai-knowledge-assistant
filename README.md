@@ -1,11 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 8 — Chunking КМУ постанови про зміни
-> Day 9 — Qdrant: Launch, Load, First Search
-> Day 10 — RAG Anatomy + Choosing a Framework
-> Day 11 — Document Loaders + Multimodal Ingestion
-> Day 12 — Retriever + prompt template
-> Day 13 — Full RAG Pipeline
+> Day 14 — Responsible Sources + Edge Cases
 
 ## Local run
 

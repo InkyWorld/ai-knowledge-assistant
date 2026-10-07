@@ -9,9 +9,12 @@ from app.rag.retriever import retrieve
 client = Anthropic(api_key=settings.anthropic_api_key)
 
 
+MIN_RELEVANCE_SCORE = 0.5
+
 def ask(question: str, document_type: str | None = None, limit: int = 3) -> dict:
     chunks = retrieve(question, document_type=document_type, limit=limit)
-
+    if not chunks or chunks[0].score < MIN_RELEVANCE_SCORE:
+        return {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
     if not chunks:
         return {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
 
