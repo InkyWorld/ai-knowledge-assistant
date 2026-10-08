@@ -28,7 +28,7 @@ def retrieve(query: str, document_type: str | None = None, limit: int = 3) -> li
     results = client.query_points(
         collection_name="knowledge_base",
         prefetch=[
-            models.Prefetch(query=query_dense, using="", limit=10),
+            models.Prefetch(query=query_dense, using="dense", limit=10),
             models.Prefetch(query=query_bm25, using="bm25", limit=10),
         ],
         query=models.FusionQuery(fusion=models.Fusion.RRF),

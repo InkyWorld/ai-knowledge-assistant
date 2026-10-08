@@ -16,10 +16,12 @@ def create_knowledge_base_collection(collection_name: str):
     if not client.collection_exists(collection_name):
         client.create_collection(
             collection_name=collection_name,
-            vectors_config=models.VectorParams(
-                size=1536,
-                distance=models.Distance.COSINE,
-            ),
+            vectors_config={
+                "dense": models.VectorParams(
+                    size=1536,
+                    distance=models.Distance.COSINE,
+                )
+            },
             quantization_config=models.ScalarQuantization(
                 scalar=models.ScalarQuantizationConfig(
                     type=models.ScalarType.INT8,

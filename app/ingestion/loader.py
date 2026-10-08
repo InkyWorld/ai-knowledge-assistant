@@ -14,7 +14,7 @@ def load_chunks_to_qdrant(chunks: list[Chunk]):
     for chunk in chunks:
         dense = get_embedding(settings.google_embedding_model, chunk.content)
         bm25 = get_sparse_vector(chunk.content)
-        vector = {"": dense, "bm25": bm25}
+        vector = {"dense": dense, "bm25": bm25}
         points.append(
             PointStruct(
                 id=uuid4(),
