@@ -5,13 +5,16 @@ from qdrant_client.http.models import PointStruct
 from app.core.config import settings
 from app.db.qdrant_client import client
 from app.embeddings.client import get_embedding
+from app.embeddings.sparse import get_sparse_vector
 from app.ingestion.chunker import Chunk
 
 
 def load_chunks_to_qdrant(chunks: list[Chunk]):
     points = []
     for chunk in chunks:
-        vector = get_embedding(settings.google_embedding_model, chunk.content)
+        dense = get_embedding(settings.google_embedding_model, chunk.content)
+        bm25 = get_sparse_vector(chunk.content)
+        vector = {"": dense, "bm25": bm25}
         points.append(
             PointStruct(
                 id=uuid4(),

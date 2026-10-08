@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 14 — Responsible Sources + Edge Cases
+> Day 15 — hybrid search (dense + BM25 + RRF) 
 
 ## Local run
 
