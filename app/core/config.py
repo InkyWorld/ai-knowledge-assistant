@@ -10,5 +10,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
     google_embedding_model: str = "gemini-embedding-2"
 
+    qdrant_collection: str = "knowledge_base"
+
 
 settings = Settings()

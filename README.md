@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 15 — hybrid search (dense + BM25 + RRF) 
+> Day 16 — Qdrant
 
 ## Local run
 
