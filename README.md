@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 16 — Qdrant
+> Day 17 — Reranking (cross-encoder)
 
 ## Local run
 

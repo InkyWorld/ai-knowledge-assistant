@@ -12,5 +12,7 @@ class Settings(BaseSettings):
 
     qdrant_collection: str = "knowledge_base"
 
+    reranker_model: str = "jinaai/jina-reranker-v2-base-multilingual"
+
 
 settings = Settings()

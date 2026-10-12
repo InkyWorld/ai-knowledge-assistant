@@ -11,9 +11,9 @@ client = Anthropic(api_key=settings.anthropic_api_key)
 
 MIN_RELEVANCE_SCORE = 0.5
 
-def ask(question: str, document_type: str | None = None, limit: int = 3) -> dict:
-    chunks = retrieve(question, document_type=document_type, limit=limit)
-    if not chunks or chunks[0].score < MIN_RELEVANCE_SCORE:
+def ask(question: str, document_type: str | None = None, search_limit: int = 3, rerank_limit: int | None = None) -> dict:
+    chunks = retrieve(question, document_type=document_type, search_limit=search_limit, rerank_limit=rerank_limit)
+    if not chunks or chunks[0].rrf_score < MIN_RELEVANCE_SCORE:
         return {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
     if not chunks:
         return {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
@@ -31,7 +31,7 @@ def ask(question: str, document_type: str | None = None, limit: int = 3) -> dict
 
     return {
         "answer": response.content[0].text,
-        "sources": [{"source": c.source, "score": c.score, "index": c.index} for c in chunks],
+        "sources": [{"source": c.source, "score": c.rrf_score, "index": c.index} for c in chunks],
     }
 
 

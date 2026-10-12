@@ -1,4 +1,4 @@
-from app.rag.retriever import RetrievedChunk
+from app.rag.schemas import RetrievedChunk
 
 
 def build_context_block(chunks: list[RetrievedChunk]) -> str:
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     from app.rag.retriever import retrieve
 
     user_question = "Яка рада уповноважена щодо сел Довгий Ліс та Великі Кліщі?"
-    chunks = retrieve(user_question)
+    chunks = retrieve(user_question, search_limit=3)
     if chunks:
         prompt = build_rag_user_prompt(user_question, chunks)
         print(prompt)
