@@ -9,7 +9,7 @@ from app.rag.schemas import RetrievedChunk
 
 
 def _search(query: str, document_type: str | None, fetch_limit: int) -> list[RetrievedChunk]:
-    query_dense = get_embedding(settings.google_embedding_model, query)
+    query_dense = get_embedding(settings.google_embedding_model, query, kind="query")
     query_bm25 = get_sparse_vector(query)
     query_filter = None
     if document_type:

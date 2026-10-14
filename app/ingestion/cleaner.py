@@ -15,9 +15,9 @@ class MarkdownCleaner:
     @staticmethod
     def _remove_bold_from_headings(markdown: str) -> str:
         """
-        **# Заголовок** -> # Заголовок
-        **## Заголовок** -> ## Заголовок
-        **### Заголовок** -> ### Заголовок
+        **# Heading** -> # Heading
+        **## Heading** -> ## Heading
+        **### Heading** -> ### Heading
         """
         return re.sub(
             r"^\s*\*\*(#{1,6})\s*(.*?)\*\*\s*$",
@@ -29,11 +29,11 @@ class MarkdownCleaner:
     @staticmethod
     def _remove_double_bold(markdown: str) -> str:
         r"""
-        Убирает случайное двойное форматирование:
+        Removes accidental double bold formatting:
 
-        **\*\*текст:\*\***
+        **\*\*text:\*\***
         ->
-        текст:
+        text:
         """
 
         markdown = markdown.replace(r"\*\*", "")
@@ -60,8 +60,8 @@ class MarkdownCleaner:
     @staticmethod
     def _remove_service_sections(markdown: str) -> str:
         """
-        Удаляет служебную информацию zakon.rada.gov.ua,
-        которая не является содержанием нормативного акта.
+        Removes boilerplate from zakon.rada.gov.ua
+        that is not part of the normative act content.
         """
 
         service_headers = (
@@ -98,8 +98,8 @@ class MarkdownCleaner:
     @staticmethod
     def _normalize_horizontal_rules(markdown: str) -> str:
         """
-        --- остаётся валидным Markdown-разделителем.
-        Убираем дубликаты.
+        --- stays a valid Markdown separator.
+        Removes duplicates.
         """
         return re.sub(
             r"(?:\n---\n){2,}",
@@ -110,8 +110,8 @@ class MarkdownCleaner:
     @staticmethod
     def _normalize_whitespace(markdown: str) -> str:
         """
-        Убирает лишние пустые строки.
-        Максимум две пустые строки подряд.
+        Removes extra blank lines.
+        At most two blank lines in a row.
         """
         markdown = re.sub(
             r"\n{3,}",

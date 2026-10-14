@@ -6,8 +6,13 @@ from app.core.config import settings
 client = QdrantClient(url="http://localhost:6333")
 
 
-def source_filter(source: str) -> models.Filter:
-    return models.Filter(must=[models.FieldCondition(key="source", match=models.MatchValue(value=source))])
+PAYLOAD_INDEXES = {
+    "file_source": models.PayloadSchemaType.KEYWORD,
+    "ingest_id": models.PayloadSchemaType.INTEGER,
+}
+
+def source_filter(file_source: str) -> models.Filter:
+    return models.Filter(must=[models.FieldCondition(key="file_source", match=models.MatchValue(value=file_source))])
 
 
 def get_points(ids: list):
@@ -19,17 +24,16 @@ def get_points(ids: list):
     )
 
 
-def delete_by_source(source: str) -> int:
-    flt = source_filter(source)
-    before = client.count(collection_name=settings.qdrant_collection, count_filter=flt, exact=True).count
-    client.delete(
-        collection_name=settings.qdrant_collection,
-        points_selector=models.FilterSelector(filter=flt),
-        wait=True,
-    )
-    after = client.count(collection_name=settings.qdrant_collection, count_filter=flt, exact=True).count
+def delete_by_source(file_source: str) -> int:
+    flt = source_filter(file_source)
+    name = settings.qdrant_collection
+    before = client.count(collection_name=name, count_filter=flt, exact=True).count
+    if before == 0:
+        raise ValueError(f"No points with file_source={file_source!r}: check the key and source name")
+    client.delete(collection_name=name, points_selector=models.FilterSelector(filter=flt), wait=True)
+    after = client.count(collection_name=name, count_filter=flt, exact=True).count
     if after != 0:
-        raise RuntimeError(f"Удаление не завершилось: осталось {after} точек")
+        raise RuntimeError(f"Delete incomplete: {after} points remain")
     return before
 
 
@@ -40,6 +44,16 @@ def drop_knowledge_base_collection(collection_name: str):
     else:
         print("Collection does not exist")
 
+def create_payload_indexes(
+    client: QdrantClient,
+    collection_name: str,
+) -> None:
+    for field_name, field_schema in PAYLOAD_INDEXES.items():
+        client.create_payload_index(
+            collection_name=collection_name,
+            field_name=field_name,
+            field_schema=field_schema,
+        )
 
 def create_knowledge_base_collection(collection_name: str):
     if not client.collection_exists(collection_name):
@@ -60,11 +74,7 @@ def create_knowledge_base_collection(collection_name: str):
             sparse_vectors_config={"bm25": models.SparseVectorParams(modifier=models.Modifier.IDF)},
         )
 
-        client.create_payload_index(
-            collection_name=collection_name,
-            field_name="document_type",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
+        create_payload_indexes(client, collection_name)
 
         print("Collection created")
 

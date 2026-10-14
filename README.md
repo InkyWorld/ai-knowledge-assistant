@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 17 — Reranking (cross-encoder)
+> Day 18 — Conversational RAG
 
 ## Local run
 

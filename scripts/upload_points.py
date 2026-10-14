@@ -41,20 +41,20 @@ def bench(points, batch_size, parallel, repeats=3):
 if __name__ == "__main__":
     t0 = time.perf_counter()
     pts = make_points(5000)
-    print(f"генерация точек: {time.perf_counter() - t0:.1f}s")
+    print(f"point generation: {time.perf_counter() - t0:.1f}s")
     for bs, par in [(1024, 1), (256, 1), (512, 1), (256, 4)]:
         bench(pts, bs, par)
     client.delete_collection("bench_tmp")
 
 # first run:
-# генерация точек: 1.7s                                                     
+# point generation: 1.7s
 # batch=1024 parallel=1: median 5.5s, 914 points/s
 # batch=256 parallel=1: median 5.3s, 936 points/s
 # batch=64 parallel=1: median 6.7s, 747 points/s
 # batch=256 parallel=4: median 7.4s, 674 points/s
 
 # second run:
-# генерация точек: 1.7s
+# point generation: 1.7s
 # batch=1024 parallel=1: median 5.1s, 982 points/s
 # batch=256 parallel=1: median 5.3s, 949 points/s
 # batch=512 parallel=1: median 4.9s, 1017 points/s

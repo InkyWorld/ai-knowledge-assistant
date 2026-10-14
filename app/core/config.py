@@ -14,5 +14,12 @@ class Settings(BaseSettings):
 
     reranker_model: str = "jinaai/jina-reranker-v2-base-multilingual"
 
+    rewriter_model: str = "claude-haiku-4-5"
+
+    # Retrieval defaults
+    search_limit: int = 15
+    rerank_limit: int = 3
+    min_rerank_score: float = -1.16
+
 
 settings = Settings()

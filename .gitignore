@@ -13,5 +13,7 @@ wheels/
 .env
 .cache/
 
+dump_project.py
+
 data/chunks
 data/markdown
