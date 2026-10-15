@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 18 — Conversational RAG
+> Day 19 — Golden dataset and baseline
 
 ## Local run
 
