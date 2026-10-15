@@ -4,7 +4,6 @@ import pymupdf
 from anthropic.types import TextBlock
 
 from app.core.clients import get_anthropic
-from app.core.config import settings
 from app.ingestion.cleaner import MarkdownCleaner
 from app.prompts.document_processor import PDF_TO_MARKDOWN_PROMPT
 

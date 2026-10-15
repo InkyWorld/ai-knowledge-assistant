@@ -19,6 +19,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "import-linter>=2.15",
+    "pytest>=9.1.1",
     "ruff>=0.3.0",
 ]
 
@@ -29,3 +31,21 @@ target-version = "py314"
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"app/prompts/*.py" = ["E501"]
+
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "app layers"
+type = "layers"
+layers = [
+    "app.api | app.evaluation",
+    "app.agent",
+    "app.rag | app.ingestion",
+    "app.db | app.embeddings",
+    "app.domain | app.prompts",
+    "app.core",
+]
