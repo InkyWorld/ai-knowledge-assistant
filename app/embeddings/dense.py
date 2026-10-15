@@ -1,20 +1,15 @@
 from typing import cast
 
-from google import genai
 from google.genai import types
 
-from app.core.config import settings
-
-client = genai.Client(
-    api_key=settings.google_api_key,
-)
+from app.core.clients import get_google
 
 
 def get_embedding(model: str, text: str, kind: str = "document", title: str | None = None) -> list[float]:
     prepared = (
         f"task: question answering | query: {text}" if kind == "query" else f"title: {title or 'none'} | text: {text}"
     )
-    response = client.models.embed_content(
+    response = get_google().models.embed_content(
         model=model,
         contents=prepared,
         config={
@@ -37,7 +32,7 @@ def get_embeddings(model: str, texts: list[str], kind: str = "document", title: 
         for t in texts
     ]
     contents = [types.Content(parts=[types.Part.from_text(text=t)]) for t in prepared]
-    response = client.models.embed_content(
+    response = get_google().models.embed_content(
         model=model,
         contents=cast(types.ContentListUnion, contents),
         config={
@@ -55,6 +50,8 @@ def get_embeddings(model: str, texts: list[str], kind: str = "document", title: 
 
 
 if __name__ == "__main__":
+    from app.core.config import settings
+
     # Example usage
     text = "Hello, world!"
     embedding = get_embedding(model=settings.google_embedding_model, text=text)

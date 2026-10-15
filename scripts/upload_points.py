@@ -5,7 +5,7 @@ import uuid
 
 from qdrant_client import models
 
-from app.db.qdrant_client import client
+from app.core.clients import get_qdrant
 
 DIM = 1536
 
@@ -22,17 +22,19 @@ def make_points(n):
 
 
 def fresh_collection(name="bench_tmp"):
-    if client.collection_exists(name):
-        client.delete_collection(name)
-    client.create_collection(name, vectors_config=models.VectorParams(size=DIM, distance=models.Distance.COSINE))
+    qdrant = get_qdrant()
+    if qdrant.collection_exists(name):
+        qdrant.delete_collection(name)
+    qdrant.create_collection(name, vectors_config=models.VectorParams(size=DIM, distance=models.Distance.COSINE))
 
 
 def bench(points, batch_size, parallel, repeats=3):
+    qdrant = get_qdrant()
     times = []
     for _ in range(repeats):
         fresh_collection()
         t0 = time.perf_counter()
-        client.upload_points("bench_tmp", points, batch_size=batch_size, parallel=parallel, wait=True)
+        qdrant.upload_points("bench_tmp", points, batch_size=batch_size, parallel=parallel, wait=True)
         times.append(time.perf_counter() - t0)
     med = statistics.median(times)
     print(f"batch={batch_size} parallel={parallel}: median {med:.1f}s, {len(points) / med:.0f} points/s")
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     print(f"point generation: {time.perf_counter() - t0:.1f}s")
     for bs, par in [(1024, 1), (256, 1), (512, 1), (256, 4)]:
         bench(pts, bs, par)
-    client.delete_collection("bench_tmp")
+    get_qdrant().delete_collection("bench_tmp")
 
 # first run:
 # point generation: 1.7s

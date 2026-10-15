@@ -1,16 +1,14 @@
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
+from app.core.clients import get_qdrant
 from app.core.config import settings
-from app.db.qdrant_client import client, source_filter
+from app.db.qdrant import source_filter
 
 
 def list_sources() -> list[str]:
     seen, offset = set(), None
     while True:
-        points, offset = client.scroll(
+        points, offset = get_qdrant().scroll(
             settings.qdrant_collection,
             limit=256,
             offset=offset,
@@ -23,7 +21,7 @@ def list_sources() -> list[str]:
 
 
 def show(file_source: str) -> None:
-    points, _ = client.scroll(
+    points, _ = get_qdrant().scroll(
         settings.qdrant_collection,
         scroll_filter=source_filter(file_source),
         limit=200,

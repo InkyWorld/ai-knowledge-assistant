@@ -5,10 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anthropic import Anthropic  # noqa: E402
-
 from app.domain.chat import ChatHistory, ChatMessage  # noqa: E402
-from app.core.config import settings  # noqa: E402
 from app.rag.query_rewriter import rewrite_query  # noqa: E402
 from app.rag.retriever import retrieve  # noqa: E402
 
@@ -23,11 +20,11 @@ def load(path: str) -> list[dict]:
     return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def standalone(q: dict, client: Anthropic) -> str:
+def standalone(q: dict) -> str:
     if not q["history"]:
         return q["question"]
     history = ChatHistory(messages=[ChatMessage(**m) for m in q["history"]])
-    return rewrite_query(client, q["question"], history)
+    return rewrite_query(q["question"], history)
 
 
 def score(retrieved: list[tuple], gold: set[tuple]) -> dict:
@@ -39,13 +36,13 @@ def score(retrieved: list[tuple], gold: set[tuple]) -> dict:
     }
 
 
-def run(items: list[dict], client: Anthropic, cfg: dict) -> list[dict]:
+def run(items: list[dict], cfg: dict) -> list[dict]:
     rows = []
     for q in items:
         if not q["answerable"]:
             continue
         gold = {(g["file_source"], g["chunk_index"]) for g in q["gold_chunks"]}
-        chunks = retrieve(standalone(q, client), **cfg)
+        chunks = retrieve(standalone(q), **cfg)
         rows.append({"id": q["id"], "category": q["category"], **score([(c.source, c.index) for c in chunks], gold)})
     return rows
 
@@ -62,7 +59,6 @@ def report(name: str, rows: list[dict]) -> None:
 
 
 if __name__ == "__main__":
-    client = Anthropic(api_key=settings.anthropic_api_key)
     items = load("eval/golden_set_v1.jsonl")
     for name, cfg in CONFIGS.items():
-        report(name, run(items, client, cfg))
+        report(name, run(items, cfg))

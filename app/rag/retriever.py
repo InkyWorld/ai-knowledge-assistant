@@ -1,11 +1,11 @@
 from qdrant_client.http import models
 
+from app.core.clients import get_qdrant
 from app.core.config import settings
-from app.db.qdrant_client import client
-from app.embeddings.client import get_embedding
+from app.domain.retrieval import RetrievedChunk
+from app.embeddings.dense import get_embedding
 from app.embeddings.sparse import get_sparse_vector
 from app.rag.reranker import rerank
-from app.domain.retrieval import RetrievedChunk
 
 
 def _search(query: str, document_type: str | None, fetch_limit: int) -> list[RetrievedChunk]:
@@ -17,8 +17,8 @@ def _search(query: str, document_type: str | None, fetch_limit: int) -> list[Ret
             must=[models.FieldCondition(key="document_type", match=models.MatchValue(value=document_type))]
         )
 
-    results = client.query_points(
-        collection_name="knowledge_base",
+    results = get_qdrant().query_points(
+        collection_name=settings.qdrant_collection,
         prefetch=[
             models.Prefetch(query=query_dense, using="dense", limit=20),
             models.Prefetch(query=query_bm25, using="bm25", limit=20),
@@ -54,8 +54,6 @@ def retrieve(
     return chunks
 
 
-
-
 if __name__ == "__main__":
     # ПЕРЕЛІК «село → рада» розбитий на чанки 8, 9 (+ хвіст 10). RRF топ-1 — процедурний чанк
     # (реєстр тергромади), а шматки списку лежать внизу видачі; реранк піднімає 9 і 8 у топ-2
@@ -66,11 +64,8 @@ if __name__ == "__main__":
     print("--- необхідні чанки (без reranking) ---")
     for i, chunk in enumerate(base):
         if chunk.index in (8, 9, 10):
-            print(f" rank {i+1}: rrf={chunk.rrf_score:.3f} [index {chunk.index}]")
+            print(f" rank {i + 1}: rrf={chunk.rrf_score:.3f} [index {chunk.index}]")
     print("--- необхідні чанки після reranking ---")
     for i, chunk in enumerate(ranked):
         if chunk.index in (8, 9, 10):
-            print(
-                f" rank {i+1}: rerank={chunk.rerank_score:+.3f}"
-                f"[index {chunk.index}]"
-            )
+            print(f" rank {i + 1}: rerank={chunk.rerank_score:+.3f}[index {chunk.index}]")

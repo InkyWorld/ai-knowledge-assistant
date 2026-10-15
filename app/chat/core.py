@@ -1,11 +1,8 @@
 from collections.abc import Iterator
 
-from anthropic import Anthropic
-
-from app.domain.chat import ChatHistory
+from app.core.clients import get_anthropic
 from app.core.config import settings
-
-client = Anthropic(api_key=settings.anthropic_api_key)
+from app.domain.chat import ChatHistory
 
 
 class ChatSession:
@@ -25,7 +22,7 @@ class ChatSession:
         if self.system:
             kwargs["system"] = self.system
 
-        response = client.messages.create(**kwargs)
+        response = get_anthropic().messages.create(**kwargs)
         assistant_text = response.content[0].text
 
         self.history.append(role="assistant", content=assistant_text)
@@ -43,7 +40,7 @@ class ChatSession:
             kwargs["system"] = self.system
 
         assistant_text = ""
-        with client.messages.stream(**kwargs) as stream:
+        with get_anthropic().messages.stream(**kwargs) as stream:
             for chunk in stream.text_stream:
                 assistant_text += chunk
                 yield chunk

@@ -1,14 +1,14 @@
-from anthropic import Anthropic
 from anthropic.types import TextBlock
 
-from app.domain.chat import ChatHistory
+from app.core.clients import get_anthropic
 from app.core.config import settings
 from app.core.logs import get_logger
+from app.domain.chat import ChatHistory
+from app.domain.retrieval import RetrievedChunk
 from app.prompts.rag_system import RAG_SYSTEM_PROMPT
 from app.rag.prompt_builder import build_rag_user_prompt
 from app.rag.query_rewriter import rewrite_query
 from app.rag.retriever import retrieve
-from app.domain.retrieval import RetrievedChunk
 
 logger = get_logger(__name__)
 
@@ -23,13 +23,12 @@ def _is_relevant(chunk: RetrievedChunk) -> bool:
 
 def ask(
     question: str,
-    client: Anthropic,
     history: ChatHistory | None = None,
     document_type: str | None = None,
     search_limit: int = 15,
     rerank_limit: int | None = 3,
 ) -> dict:
-    standalone = rewrite_query(client, question, history)
+    standalone = rewrite_query(question, history)
     chunks = retrieve(
         standalone,
         document_type=document_type,
@@ -43,7 +42,7 @@ def ask(
 
     user_prompt = build_rag_user_prompt(question, chunks)
 
-    response = client.messages.create(
+    response = get_anthropic().messages.create(
         model=settings.anthropic_model,
         max_tokens=1024,
         system=RAG_SYSTEM_PROMPT,
@@ -66,23 +65,22 @@ def ask(
 
 
 if __name__ == "__main__":
-    client = Anthropic(api_key=settings.anthropic_api_key)
-    from app.chat.core import ChatSession
+    from app.domain.chat import ChatHistory
 
-    session = ChatSession(model=settings.anthropic_model)
+    history = ChatHistory(messages=[])
     question1 = "Яка рада уповноважена щодо сел Довгий Ліс та Великі Кліщі?"
-    result1 = ask(question1, client=client, history=session.history)
-    session.history.append(role="user", content=question1)
-    session.history.append(role="assistant", content=result1["answer"])
+    result1 = ask(question1, history=history)
+    history.append(role="user", content=question1)
+    history.append(role="assistant", content=result1["answer"])
     print("Відповідь:", result1["answer"])
     print("\nДжерела:")
     for s in result1["sources"]:
         print(f"  {s['source']} | (score={s['score']:.3f}) | (index={s['index']})")
 
     question2 = "В якій постанові про це йдеться?"
-    result2 = ask(question2, client=client, history=session.history)
-    session.history.append(role="user", content=question2)
-    session.history.append(role="assistant", content=result2["answer"])
+    result2 = ask(question2, history=history)
+    history.append(role="user", content=question2)
+    history.append(role="assistant", content=result2["answer"])
     print("Відповідь:", result2["answer"])
     print("\nДжерела:")
     for s in result2["sources"]:

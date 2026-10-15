@@ -4,11 +4,11 @@ from collections.abc import Iterator
 from qdrant_client.http import models
 from qdrant_client.http.models import PointStruct
 
+from app.core.clients import get_qdrant
 from app.core.config import settings
-from app.db.qdrant_client import client
-from app.embeddings.client import get_embeddings
-from app.embeddings.sparse import get_sparse_vector
 from app.domain.documents import Chunk
+from app.embeddings.dense import get_embeddings
+from app.embeddings.sparse import get_sparse_vector
 
 EMBED_BATCH_SIZE = 100
 
@@ -39,7 +39,7 @@ def load_chunks_to_qdrant(chunks: list[Chunk], ingest_id: str | None = None) -> 
                 },
             )
         )
-    client.upsert(collection_name="knowledge_base", points=points)
+    get_qdrant().upsert(collection_name=settings.qdrant_collection, points=points)
 
 
 def _points(chunks: list[Chunk], ingest_id: str):
@@ -57,11 +57,11 @@ def _points(chunks: list[Chunk], ingest_id: str):
 
 def replace_document(file_source: str, chunks: list[Chunk]) -> None:
     ingest_id = uuid.uuid4().hex
-    client.upload_points(
+    get_qdrant().upload_points(
         collection_name=settings.qdrant_collection, points=_points(chunks, ingest_id), batch_size=256, wait=True
     )
     # the new version is already in the DB; delete only leftovers of the old one
-    client.delete(
+    get_qdrant().delete(
         collection_name=settings.qdrant_collection,
         points_selector=models.FilterSelector(
             filter=models.Filter(

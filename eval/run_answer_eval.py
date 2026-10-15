@@ -4,10 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anthropic import Anthropic
-
 from app.domain.chat import ChatHistory, ChatMessage
-from app.core.config import settings
 from app.rag.pipeline import ask
 from eval.run_retrieval_eval import load
 
@@ -22,12 +19,11 @@ def check(q: dict, result: dict) -> bool:
 
 
 def main() -> None:
-    client = Anthropic(api_key=settings.anthropic_api_key)
     items = load("eval/golden_set_v1.jsonl")
     rows = []
     for q in items:
         history = ChatHistory(messages=[ChatMessage(**m) for m in q["history"]]) if q["history"] else None
-        result = ask(q["question"], client=client, history=history)
+        result = ask(q["question"], history=history)
         ok = check(q, result)
         rows.append({"id": q["id"], "category": q["category"], "ok": ok, "answer": result["answer"]})
         print(f"{q['id']} {q['category']:16} ok={int(ok)}")

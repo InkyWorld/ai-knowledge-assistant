@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     google_embedding_model: str = "gemini-embedding-2"
 
     qdrant_collection: str = "knowledge_base"
+    qdrant_url: str = "http://localhost:6333"
 
     reranker_model: str = "jinaai/jina-reranker-v2-base-multilingual"
 
