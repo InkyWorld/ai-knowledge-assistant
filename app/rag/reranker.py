@@ -2,7 +2,7 @@ from dataclasses import replace
 from functools import lru_cache
 
 from app.core.config import settings
-from app.rag.schemas import RetrievedChunk
+from app.domain.retrieval import RetrievedChunk
 
 
 @lru_cache(maxsize=1)

@@ -2,7 +2,7 @@ from collections.abc import Iterator
 
 from anthropic import Anthropic
 
-from app.chat.schemas import ChatHistory
+from app.domain.chat import ChatHistory
 from app.core.config import settings
 
 client = Anthropic(api_key=settings.anthropic_api_key)

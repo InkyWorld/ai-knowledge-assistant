@@ -5,7 +5,7 @@ from app.db.qdrant_client import client
 from app.embeddings.client import get_embedding
 from app.embeddings.sparse import get_sparse_vector
 from app.rag.reranker import rerank
-from app.rag.schemas import RetrievedChunk
+from app.domain.retrieval import RetrievedChunk
 
 
 def _search(query: str, document_type: str | None, fetch_limit: int) -> list[RetrievedChunk]:

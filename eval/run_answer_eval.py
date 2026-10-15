@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anthropic import Anthropic
 
-from app.chat.schemas import ChatHistory, ChatMessage
+from app.domain.chat import ChatHistory, ChatMessage
 from app.core.config import settings
 from app.rag.pipeline import ask
 from eval.run_retrieval_eval import load

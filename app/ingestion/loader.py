@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.db.qdrant_client import client
 from app.embeddings.client import get_embeddings
 from app.embeddings.sparse import get_sparse_vector
-from app.ingestion.chunker import Chunk
+from app.domain.documents import Chunk
 
 EMBED_BATCH_SIZE = 100
 

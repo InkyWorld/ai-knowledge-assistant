@@ -1,4 +1,4 @@
-from app.rag.schemas import RetrievedChunk
+from app.domain.retrieval import RetrievedChunk
 
 
 def build_context_block(chunks: list[RetrievedChunk]) -> str:

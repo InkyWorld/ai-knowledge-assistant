@@ -2,7 +2,7 @@ import anthropic
 from anthropic import Anthropic
 from anthropic.types import TextBlock
 
-from app.chat.schemas import ChatHistory
+from app.domain.chat import ChatHistory
 from app.core.config import settings
 from app.core.logs import logger
 from app.prompts.query_rewriter import SYSTEM_QUERY_REWRITER

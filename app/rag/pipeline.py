@@ -1,14 +1,14 @@
 from anthropic import Anthropic
 from anthropic.types import TextBlock
 
-from app.chat.schemas import ChatHistory
+from app.domain.chat import ChatHistory
 from app.core.config import settings
 from app.core.logs import get_logger
 from app.prompts.rag_system import RAG_SYSTEM_PROMPT
 from app.rag.prompt_builder import build_rag_user_prompt
 from app.rag.query_rewriter import rewrite_query
 from app.rag.retriever import retrieve
-from app.rag.schemas import RetrievedChunk
+from app.domain.retrieval import RetrievedChunk
 
 logger = get_logger(__name__)
 

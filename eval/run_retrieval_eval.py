@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anthropic import Anthropic  # noqa: E402
 
-from app.chat.schemas import ChatHistory, ChatMessage  # noqa: E402
+from app.domain.chat import ChatHistory, ChatMessage  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from app.rag.query_rewriter import rewrite_query  # noqa: E402
 from app.rag.retriever import retrieve  # noqa: E402
