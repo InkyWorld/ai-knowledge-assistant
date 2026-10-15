@@ -11,7 +11,4 @@ def get_sparse_model() -> SparseTextEmbedding:
 
 def get_sparse_vector(text: str):
     embedding = next(iter(get_sparse_model().embed([text])))
-    return models.SparseVector(
-            indices=embedding.indices.tolist(), 
-            values=embedding.values.tolist()
-        )
+    return models.SparseVector(indices=embedding.indices.tolist(), values=embedding.values.tolist())

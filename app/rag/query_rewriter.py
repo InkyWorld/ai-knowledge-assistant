@@ -20,8 +20,7 @@ def rewrite_query(question: str, history: ChatHistory | None = None) -> str:
                 {
                     "role": "user",
                     "content": (
-                        f"<history>\n{history.to_text(last=4)}\n</history>\n\n"
-                        f"<question>\n{question}\n</question>"
+                        f"<history>\n{history.to_text(last=4)}\n</history>\n\n<question>\n{question}\n</question>"
                     ),
                 }
             ],
