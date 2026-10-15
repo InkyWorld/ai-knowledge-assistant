@@ -1,12 +1,12 @@
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 from app.domain.chat import ChatHistory, ChatMessage
+from app.evaluation.run_retrieval import load
 from app.rag.pipeline import ask
-from eval.run_retrieval_eval import load
+
+GOLDEN_PATH = "eval/golden_set_v1.jsonl"
+RESULTS_PATH = "eval/results/answers_v1.json"
 
 NO_ANSWER = ("не знайшов", "не знаю", "немає інформації")
 
@@ -19,7 +19,7 @@ def check(q: dict, result: dict) -> bool:
 
 
 def main() -> None:
-    items = load("eval/golden_set_v1.jsonl")
+    items = load(GOLDEN_PATH)
     rows = []
     for q in items:
         history = ChatHistory(messages=[ChatMessage(**m) for m in q["history"]]) if q["history"] else None
@@ -27,8 +27,8 @@ def main() -> None:
         ok = check(q, result)
         rows.append({"id": q["id"], "category": q["category"], "ok": ok, "answer": result["answer"]})
         print(f"{q['id']} {q['category']:16} ok={int(ok)}")
-    Path("eval/results/answers_v1.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\nsaved {len(rows)} rows to eval/results/answers_v1.json")
+    Path(RESULTS_PATH).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nsaved {len(rows)} rows to {RESULTS_PATH}")
 
 
 if __name__ == "__main__":
