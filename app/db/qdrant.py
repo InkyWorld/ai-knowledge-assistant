@@ -6,6 +6,9 @@ from app.core.config import settings
 PAYLOAD_INDEXES = {
     "file_source": models.PayloadSchemaType.KEYWORD,
     "ingest_id": models.PayloadSchemaType.INTEGER,
+    # Хэш всего текста документа для дедупликации по содержимому.
+    # KEYWORD-индекс должен существовать ДО загрузки (иначе фильтр по doc_hash — fullscan).
+    "doc_hash": models.PayloadSchemaType.KEYWORD,
 }
 
 

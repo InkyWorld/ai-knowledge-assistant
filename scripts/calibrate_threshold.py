@@ -1,34 +1,52 @@
 """
 Calibration script for min_rerank_score threshold.
+
+- Answerable: собираются ПРОГРАММНО из dev-части golden set (не копируются вручную),
+  чтобы калибровка не расходилась с замером.
+- Unanswerable: минимум половина — «трудные отрицательные» (вопросы по теме,
+  ответа на которые нет в базе). Оффтопик (курс доллара, погода) даёт
+  завышенный зазор и ложную уверенность в пороге.
+- Вместо одного значения печатается чувствительность порога: цена q07
+  (ответ был, реранкер −1.75 отправил в отказ) видна сразу.
 """
 
+import json
 import statistics
+from pathlib import Path
 
 from app.core.logs import get_logger
+from app.domain.chat import ChatHistory, ChatMessage
+from app.rag.query_rewriter import rewrite_query
 from app.rag.retriever import retrieve
 
 logger = get_logger(__name__)
 
-answerable = [
-    "Яка рада уповноважена щодо сіл Довгий Ліс та Великі Кліщі?",
-    "Які громади охоплює постанова 1174?",
-    "Від якої дати постанова № 1187 про внесення змін?",
-    "Які зміни внесено до постанови Кабінету Міністрів України?",
-    "Коли набирає чинності постанова про внесення змін?",
-    "Ким затверджено зміни щодо надання державної субсидії?",
-    "Що доповнено в пункті 11 переліку заходів у сфері культури?",
-    "Який порядок використання коштів затверджено постановою № 638?",
-    "Які доповнення внесено до пункту 4 порядку використання коштів?",
-    "В якій постанові йдеться про Довгий Ліс та Великі Кліщі?",
+GOLDEN_PATH = "eval/golden_set_v1.jsonl"
+
+# Трудные отрицательные: по теме корпуса, но ответа в базе нет.
+# >= 50% неотвечаемых — такие (остальные — явный оффтопик для якоря).
+HARD_NEGATIVES = [
+    "Хто підписав постанову № 1189?",
+    "Що змінює постанова № 9999?",
+    "Який строк дії постанови № 1179 для підприємств Запоріжжя?",
+    "Яку суму виділено на безбар'єрні маршрути у 2027 році?",
+    "Які громади охоплює постанова № 9999?",
 ]
 
-unanswerable = [
+OFFTOPIC_NEGATIVES = [
     "Який курс долара сьогодні?",
     "Яка погода завтра в Києві?",
     "Хто виграв вчорашній футбольний матч?",
-    "Як приготувати борщ?",
-    "Яка ціна біткоїна зараз?",
 ]
+
+THRESHOLDS = [-2.5, -2.0, -1.5, -1.16, -0.5, 0.0, 0.4]
+
+
+def standalone(question: str, history: list | None = None) -> str:
+    if not history:
+        return question
+    h = ChatHistory(messages=[ChatMessage(**m) for m in history])
+    return rewrite_query(question, h)
 
 
 def top_score(q: str) -> float | None:
@@ -39,22 +57,28 @@ def top_score(q: str) -> float | None:
 
 
 def main() -> None:
-    a_raw = [(q, top_score(q)) for q in answerable]
+    items = [json.loads(line) for line in Path(GOLDEN_PATH).read_text(encoding="utf-8").splitlines() if line.strip()]
+    answerable = [(q["id"], standalone(q["question"], q["history"])) for q in items if q["answerable"] and q.get("split") == "dev"]
+    unanswerable_dev = [q["question"] for q in items if not q["answerable"] and q.get("split") == "dev"]
+    unanswerable = HARD_NEGATIVES + OFFTOPIC_NEGATIVES + unanswerable_dev
+    hard_share = len(HARD_NEGATIVES) / len(unanswerable)
+    print(f"answerable: {len(answerable)} (dev golden), unanswerable: {len(unanswerable)} (hard {len(HARD_NEGATIVES)}, share={hard_share:.0%})")
+    assert hard_share >= 0.5, "трудных отрицательных должно быть >= 50% неотвечаемых"
+
+    a_raw = [(qid, q, top_score(q)) for qid, q in answerable]
     u_raw = [(q, top_score(q)) for q in unanswerable]
 
-    for q, s in a_raw:
-        print(f"  [A] {s} | {q}")
+    for qid, q, s in a_raw:
+        mark = "  <-- РИСК ОТКАЗА (ср. q07=-1.75)" if s is not None and s < -1.16 else ""
+        print(f"  [A] {qid} {s:+.3f}" if s is not None else f"  [A] {qid} None", f"| {q[:60]}" + mark)
     for q, s in u_raw:
-        print(f"  [U] {s} | {q}")
+        print(f"  [U] {s:+.3f}" if s is not None else "  [U] None", f"| {q[:60]}")
 
-    a = sorted(s for _, s in a_raw if s is not None)
+    a = sorted(s for _, _, s in a_raw if s is not None)
     u = sorted(s for _, s in u_raw if s is not None)
 
-    if not a:
-        print("No scores for answerable — check Qdrant/collection.")
-        return
-    if not u:
-        print("No scores for unanswerable — check Qdrant/collection.")
+    if not a or not u:
+        print("No scores — check Qdrant/collection.")
         return
 
     print(f"answerable: min {a[0]:+.3f} median {statistics.median(a):+.3f} max {a[-1]:+.3f} (n={len(a)})")
@@ -62,11 +86,17 @@ def main() -> None:
 
     if u[-1] < a[0]:
         mid = (u[-1] + a[0]) / 2
-        print(f"Pick a threshold between {u[-1]:+.3f} and {a[0]:+.3f}, e.g. {mid:+.3f} -> MIN_RERANK_SCORE")
+        print(f"Gap: threshold between {u[-1]:+.3f} and {a[0]:+.3f}, e.g. {mid:+.3f}")
     else:
-        print("Ranges overlap — the threshold cannot be trusted, an LLM gate is needed.")
+        print("Ranges overlap — один порог не разделяет классы, нужен LLM-гейт поверх скора.")
 
-    none_a = sum(1 for _, s in a_raw if s is None)
+    print("\nЧувствительность порога (верные отказы vs потерянные ответы):")
+    for t in THRESHOLDS:
+        denied_u = sum(s < t for s in u)
+        lost_a = sum(s < t for s in a)
+        print(f"t={t:+.2f}: верных отказов {denied_u}/{len(u)}, потеряно ответов {lost_a}/{len(a)}")
+
+    none_a = sum(1 for _, _, s in a_raw if s is None)
     none_u = sum(1 for _, s in u_raw if s is None)
     if none_a or none_u:
         logger.warning("Empty results / None scores: answerable=%d unanswerable=%d", none_a, none_u)
@@ -74,22 +104,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-#   [A] 0.943545937538147 | Яка рада уповноважена щодо сіл Довгий Ліс та Великі Кліщі?
-#   [A] 0.43225008249282837 | Які громади охоплює постанова 1174?
-#   [A] 0.8548252582550049 | Від якої дати постанова № 1187 про внесення змін?
-#   [A] 1.2190173864364624 | Які зміни внесено до постанови Кабінету Міністрів України?
-#   [A] 0.5682789087295532 | Коли набирає чинності постанова про внесення змін?
-#   [A] 0.7227606177330017 | Ким затверджено зміни щодо надання державної субсидії?
-#   [A] 0.5777747631072998 | Що доповнено в пункті 11 переліку заходів у сфері культури?
-#   [A] 0.41328561305999756 | Який порядок використання коштів затверджено постановою № 638?
-#   [A] 0.5208566784858704 | Які доповнення внесено до пункту 4 порядку використання коштів?
-#   [A] 0.5017598271369934 | В якій постанові йдеться про Довгий Ліс та Великі Кліщі?
-#   [U] -3.049144744873047 | Який курс долара сьогодні?
-#   [U] -2.7340638637542725 | Яка погода завтра в Києві?
-#   [U] -3.5169596672058105 | Хто виграв вчорашній футбольний матч?
-#   [U] -3.074880361557007 | Як приготувати борщ?
-#   [U] -2.9137063026428223 | Яка ціна біткоїна зараз?
-# With a response: min +0.413, median +0.573, max +1.219 (n=10)
-# Without a response: min -3.517, max -2.734 (n=5)
-# Choose a threshold between -2.734 and +0.413; for example, -1.160 -> MIN_RERANK_SCORE

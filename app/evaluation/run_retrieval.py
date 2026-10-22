@@ -34,7 +34,15 @@ def run(items: list[dict], cfg: dict) -> list[dict]:
             continue
         gold = {(g["file_source"], g["chunk_index"]) for g in q["gold_chunks"]}
         chunks = retrieve(standalone(q), **cfg)
-        rows.append({"id": q["id"], "category": q["category"], **score([(c.source, c.index) for c in chunks], gold, K)})
+        rows.append(
+            {
+                "id": q["id"],
+                "category": q["category"],
+                "split": q.get("split", "?"),
+                "retrieved": [(c.source, c.index) for c in chunks],
+                **score([(c.source, c.index) for c in chunks], gold, K),
+            }
+        )
     return rows
 
 

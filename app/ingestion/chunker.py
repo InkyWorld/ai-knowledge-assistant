@@ -6,6 +6,7 @@ from langchain_text_splitters import (
 )
 
 from app.domain.documents import Chunk
+from app.ingestion.loader import compute_doc_hash
 
 
 class LegalChunker:
@@ -37,6 +38,7 @@ class LegalChunker:
 
     def split(self, input_path: Path):
         markdown = input_path.read_text(encoding="utf-8")
+        doc_hash = compute_doc_hash(markdown)
         documents = self.header_splitter.split_text(markdown)
         raw_chunks = self.text_splitter.split_documents(documents)
         chunks = []
@@ -57,6 +59,7 @@ class LegalChunker:
                     content=raw_chunk.page_content,
                     headers=context_prefix,
                     chunk_index=i,
+                    doc_hash=doc_hash,
                 )
             )
 

@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 19 — Golden dataset and baseline
+> Day 20 - 21 Refactoring and FastAPI Asynchronous Integration
 
 ## Local run
 

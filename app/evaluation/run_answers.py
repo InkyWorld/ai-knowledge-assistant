@@ -10,6 +10,16 @@ RESULTS_PATH = "eval/results/answers_v1.json"
 
 NO_ANSWER = ("не знайшов", "не знаю", "немає інформації")
 
+# Маркеры спекуляции: must_contain их пропускает (пример q15 — «вірогідно, тисяч гривень»,
+# хотя в контексте чанка 9 постанови № 1176 единицы измерения нет, только «16 050»).
+# check() их не фейлит (чтобы не шуметь на детерминированности), но помечает warn для ручного разбора.
+SPECULATION_MARKERS = ("вірогідно", "ймовірно", "скоріш за все", "тисяч гривень", "млн грн")
+
+
+def speculation_warn(answer: str) -> list[str]:
+    text = answer.lower()
+    return [m for m in SPECULATION_MARKERS if m in text]
+
 
 def check(q: dict, result: dict) -> bool:
     text = result["answer"].lower()
@@ -25,8 +35,10 @@ def main() -> None:
         history = ChatHistory(messages=[ChatMessage(**m) for m in q["history"]]) if q["history"] else None
         result = ask(q["question"], history=history)
         ok = check(q, result)
-        rows.append({"id": q["id"], "category": q["category"], "ok": ok, "answer": result["answer"]})
-        print(f"{q['id']} {q['category']:16} ok={int(ok)}")
+        warn = speculation_warn(result["answer"])
+        rows.append({"id": q["id"], "category": q["category"], "split": q.get("split", "?"), "ok": ok, "answer": result["answer"], "speculation_warn": warn})
+        flag = f" SPEC?{warn}" if warn else ""
+        print(f"{q['id']} {q['category']:16} ok={int(ok)}{flag}")
     Path(RESULTS_PATH).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nsaved {len(rows)} rows to {RESULTS_PATH}")
 

@@ -8,17 +8,12 @@ from app.domain.retrieval import RetrievedChunk
 from app.prompts.rag_system import RAG_SYSTEM_PROMPT
 from app.rag.prompt_builder import build_rag_user_prompt
 from app.rag.query_rewriter import rewrite_query
+from app.rag.relevance import is_relevant
 from app.rag.retriever import retrieve
 
 logger = get_logger(__name__)
 
 NO_ANSWER = {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
-
-
-def _is_relevant(chunk: RetrievedChunk) -> bool:
-    if chunk.rerank_score is None:
-        return True
-    return chunk.rerank_score >= settings.min_rerank_score
 
 
 def ask(
@@ -35,7 +30,7 @@ def ask(
         search_limit=search_limit,
         rerank_limit=rerank_limit,
     )
-    if not chunks or not _is_relevant(chunks[0]):
+    if not chunks or not is_relevant(chunks[0]):
         top = chunks[0].rerank_score if chunks else None
         logger.info("no relevant chunks: standalone=%r top_rerank=%s", standalone, top)
         return NO_ANSWER
