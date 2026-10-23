@@ -22,5 +22,9 @@ class Settings(BaseSettings):
     rerank_limit: int = 3
     min_rerank_score: float = -1.16
 
+    crag_pass_score = -0.5
+    crag_reject_score = -2.0
+    crag_max_attempts = 2
+
 
 settings = Settings()

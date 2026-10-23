@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 20 - 21 Refactoring and FastAPI Asynchronous Integration
+> Day 23 - 24 ReAct and CRAG
 
 ## Local run
 
