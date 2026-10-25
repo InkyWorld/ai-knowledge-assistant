@@ -16,6 +16,21 @@ def source_filter(file_source: str) -> models.Filter:
     return models.Filter(must=[models.FieldCondition(key="file_source", match=models.MatchValue(value=file_source))])
 
 
+def list_sources() -> list[str]:
+    seen, offset = set(), None
+    while True:
+        points, offset = get_qdrant().scroll(
+            settings.qdrant_collection,
+            limit=256,
+            offset=offset,
+            with_payload=["file_source"],
+            with_vectors=False,
+        )
+        seen.update(p.payload["file_source"] for p in points if p.payload is not None)
+        if offset is None:
+            return sorted(seen)
+
+
 def get_points(ids: list):
     qdrant = get_qdrant()
     return qdrant.retrieve(

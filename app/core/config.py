@@ -22,9 +22,12 @@ class Settings(BaseSettings):
     rerank_limit: int = 3
     min_rerank_score: float = -1.16
 
-    crag_pass_score = -0.5
-    crag_reject_score = -2.0
-    crag_max_attempts = 2
+    crag_pass_score: float = -0.5
+    crag_reject_score: float = -2.0
+    crag_max_attempts: int = 2
+
+    database_url: str = "postgresql+psycopg://app:app@localhost:5432/assistant"
+    database_url_readonly: str = "postgresql+psycopg://assistant_ro:change-me@localhost:5432/assistant"
 
 
 settings = Settings()

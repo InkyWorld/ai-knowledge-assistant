@@ -5,5 +5,21 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: assistant
+    ports: ["5432:5432"]
+    volumes: 
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d assistant"]
+      interval: 5s
+      retries: 10
+
 volumes:
   qdrant_data:
+  pg_data:

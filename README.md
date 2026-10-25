@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 23 - 24 ReAct and CRAG
+> Day 25 - 26 Postgres + Text-to-SQL
 
 ## Local run
 
