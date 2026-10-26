@@ -1,4 +1,5 @@
 from app.agent.tools.calculator import safe_eval
+from app.agent.tools.sql_query import run_sql_tool
 from app.rag.relevance import is_relevant
 from app.rag.retriever import retrieve
 
@@ -8,7 +9,8 @@ TOOLS = [
         "description": (
             "Шукає у базі нормативних документів (постанови КМУ) фрагменти за змістом: що змінено, "
             "хто уповноважений, до якої дати, які громади. Повертає до 4 фрагментів із джерелом. "
-            "НЕ використовуй для підрахунків і статистики по всіх документах."
+            "НЕ використовуй для підрахунків і статистики по всіх документах. "
+            "НЕ використовуй для підрахунків і переліків за каталогом, для цього sql_query."
         ),
         "input_schema": {
             "type": "object",
@@ -23,6 +25,19 @@ TOOLS = [
             "type": "object",
             "properties": {"expression": {"type": "string", "description": "Наприклад: (12 + 8) * 3"}},
             "required": ["expression"],
+        },
+    },
+    {
+        "name": "sql_query",
+        "description": (
+            "Відповідає на запитання про каталог завантажених документів: скільки, яка найновіша чи найстаріша, "
+            "перелік номерів або дат, фільтри за періодом і типом. Приймає запитання природною мовою (НЕ SQL). "
+            "НЕ використовуй для змісту документів, для цього rag_search."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"question": {"type": "string", "description": "Запитання про каталог документів"}},
+            "required": ["question"],
         },
     },
 ]
@@ -40,6 +55,7 @@ def run_rag_search(query: str) -> str:
 HANDLERS = {
     "rag_search": lambda args: run_rag_search(args["query"]),
     "calculator": lambda args: str(safe_eval(args["expression"])),
+    "sql_query": lambda args: run_sql_tool(args["question"])
 }
 
 

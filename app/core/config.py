@@ -28,6 +28,6 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://app:app@localhost:5432/assistant"
     database_url_readonly: str = "postgresql+psycopg://assistant_ro:change-me@localhost:5432/assistant"
-
+    checkpoint_database_url: str = "postgresql://app:app@localhost:5432/assistant"
 
 settings = Settings()

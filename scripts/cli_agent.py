@@ -1,36 +1,28 @@
-import json
+import uuid
 
-from app.agent.manual_react import run_agent
-from app.domain.chat import ChatHistory
+from langgraph.errors import GraphRecursionError
+
+from app.agent.runtime import agent_with_memory
 
 
-def print_steps(steps: list[dict]) -> None:
-    for s in steps:
-        print(f"\n[Step {s['step'] + 1}] tool: {s['tool']}")
-        if s["thought"]:
-            print(f"  Thought: {s['thought']}")
-        print(f"  Input: {json.dumps(s['input'], ensure_ascii=False)}")
-        print(f"  Output: {s['output_preview']}")
-        if s["is_error"]:
-            print("  Status: error")
+def final_text(state: dict) -> str:
+    content = state["messages"][-1]["content"]
+    return "".join(b["text"] for b in content if b["type"] == "text").strip()
 
 
 def main() -> None:
-    history = ChatHistory(messages=[])
-    print("Agent initialized. Type 'exit' to quit.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            break
-        result = run_agent(user_input, history=history)
-        history.append(role="user", content=user_input)
-        history.append(role="assistant", content=result.answer)
-        if result.steps:
-            print_steps(result.steps)
-        print(f"\nAnswer: {result.answer}")
-        if result.stopped_by == "max_steps":
-            print("  Agent stopped by max steps limit.")
-        print(f"  Tokens: input={result.input_tokens}, output={result.output_tokens}")
+    thread_id = input("thread_id (Enter = новий): ").strip() or str(uuid.uuid4())
+    print("thread:", thread_id)
+    with agent_with_memory() as agent:
+        while question := input("Ви: ").strip():
+            try:
+                state = agent.invoke(
+                    {"messages": [{"role": "user", "content": question}], "stop_reason": ""},
+                    {"configurable": {"thread_id": thread_id}, "recursion_limit": 25},
+                )
+                print("Асистент:", final_text(state))
+            except GraphRecursionError:
+                print("Асистент: не вдалося завершити за ліміт кроків.")
 
 
 if __name__ == "__main__":

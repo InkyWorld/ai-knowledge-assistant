@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 25 - 26 Postgres + Text-to-SQL
+> Day 27 SQL as an Agent Tool and Memory
 
 ## Local run
 

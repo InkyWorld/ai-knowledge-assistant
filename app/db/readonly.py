@@ -26,4 +26,4 @@ def run_readonly_query(sql: str) -> list[dict]:
             result = conn.execute(text(safe_sql))
             return [dict(row._mapping) for row in result.fetchmany(MAX_ROWS)]
     except DBAPIError as exc:
-        raise SqlRejected(f"помилка бази: {str(exc.orig).splitlines()[0]}") from exc
+        raise SqlRejected(f"помилка бази: {str(exc.orig).splitlines()[0]}", retryable=True) from exc
