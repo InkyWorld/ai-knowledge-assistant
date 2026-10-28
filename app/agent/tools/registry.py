@@ -1,3 +1,5 @@
+from langfuse import observe
+
 from app.agent.tools.calculator import safe_eval
 from app.agent.tools.sql_query import run_sql_tool
 from app.rag.relevance import is_relevant
@@ -59,6 +61,7 @@ HANDLERS = {
 }
 
 
+@observe(as_type="tool", name="execute_tool")
 def execute_tool(name: str, args: dict) -> tuple[str, bool]:
     handler = HANDLERS.get(name)
     if handler is None:

@@ -1,5 +1,6 @@
 import anthropic
 from anthropic.types import TextBlock
+from langfuse import observe
 
 from app.core.clients import get_anthropic
 from app.core.config import settings
@@ -8,6 +9,7 @@ from app.domain.chat import ChatHistory
 from app.prompts.query_rewriter import SYSTEM_QUERY_REWRITER
 
 
+@observe(name="rewrite_query")
 def rewrite_query(question: str, history: ChatHistory | None = None) -> str:
     if history is None or not history.messages:
         return question

@@ -30,4 +30,10 @@ class Settings(BaseSettings):
     database_url_readonly: str = "postgresql+psycopg://assistant_ro:change-me@localhost:5432/assistant"
     checkpoint_database_url: str = "postgresql://app:app@localhost:5432/assistant"
 
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = ""
+    agent_max_steps: int = 30
+    agent_max_tokens: int = 100000
+
 settings = Settings()

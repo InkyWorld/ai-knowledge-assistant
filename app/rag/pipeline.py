@@ -1,4 +1,5 @@
 from anthropic.types import TextBlock
+from langfuse import observe
 
 from app.core.clients import get_anthropic
 from app.core.config import settings
@@ -16,6 +17,7 @@ logger = get_logger(__name__)
 NO_ANSWER = {"answer": "Я не знайшов релевантної інформації в базі знань.", "sources": []}
 
 
+@observe(name="ask")
 def ask(
     question: str,
     history: ChatHistory | None = None,

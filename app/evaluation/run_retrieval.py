@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from app.core.observability import flush_tracing, init_tracing
 from app.domain.chat import ChatHistory, ChatMessage
 from app.evaluation.metrics import report, score
 from app.rag.query_rewriter import rewrite_query
@@ -47,6 +48,7 @@ def run(items: list[dict], cfg: dict) -> list[dict]:
 
 
 def main() -> None:
+    init_tracing()
     items = load(GOLDEN_PATH)
     all_rows: dict[str, list[dict]] = {}
     for name, cfg in CONFIGS.items():
@@ -55,6 +57,7 @@ def main() -> None:
         all_rows[name] = rows
     Path(RESULTS_PATH).write_text(json.dumps(all_rows, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nsaved per-question rows to {RESULTS_PATH}")
+    flush_tracing()
 
 
 if __name__ == "__main__":

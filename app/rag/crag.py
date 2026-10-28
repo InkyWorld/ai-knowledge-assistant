@@ -3,6 +3,7 @@ import operator
 from dataclasses import dataclass
 from typing import Annotated, TypedDict
 
+from langfuse import observe
 from langgraph.graph import END, START, StateGraph
 
 from app.core.config import settings
@@ -27,6 +28,7 @@ def retrieve_node(state: CragState) -> dict:
     return {"chunks": chunks, "attempts": n, "trace": [f"retrieve#{n} q={state['query']!r} top={top}"]}
 
 
+@observe(name="grade")
 def grade_node(state: CragState) -> dict:
     chunks = state["chunks"]
     top = chunks[0].rerank_score if chunks else None
@@ -43,6 +45,7 @@ def grade_node(state: CragState) -> dict:
     return {"verdict": verdict, "trace": [f"grade[{how}] top={top} -> {verdict}"]}
 
 
+@observe(name="rewrite_for_search")
 def rewrite_node(state: CragState) -> dict:
     new_query = rewrite_for_search(state["question"], state["query"])
     return {"query": new_query, "trace": [f"rewrite -> {new_query!r}"]}
@@ -72,6 +75,7 @@ class CragResult:
     trace: list[str]
 
 
+@observe(name="crag")
 def corrective_retrieve(question: str) -> CragResult:
     state = _CRAG.invoke({"question": question, "query": question, "chunks": [],
                           "attempts": 0, "verdict": "", "trace": []})

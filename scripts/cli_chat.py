@@ -1,8 +1,10 @@
+from app.core.observability import flush_tracing, init_tracing
 from app.domain.chat import ChatHistory
 from app.rag.pipeline import ask
 
 
 def main() -> None:
+    init_tracing()
     history = ChatHistory(messages=[])
     print("Chat initialized. Type 'exit' to quit.")
     while True:
@@ -17,6 +19,7 @@ def main() -> None:
             print("\nДжерела:")
             for s in result["sources"]:
                 print(f"  {s['source']} | (score={s['score']:.3f}) | (index={s['index']})")
+    flush_tracing()
 
 
 if __name__ == "__main__":

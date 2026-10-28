@@ -1,10 +1,12 @@
 from typing import cast
 
 from google.genai import types
+from langfuse import observe
 
 from app.core.clients import get_google
 
 
+@observe(as_type="embedding", name="google_embedding")
 def get_embedding(model: str, text: str, kind: str = "document", title: str | None = None) -> list[float]:
     prepared = (
         f"task: question answering | query: {text}" if kind == "query" else f"title: {title or 'none'} | text: {text}"
@@ -22,6 +24,7 @@ def get_embedding(model: str, text: str, kind: str = "document", title: str | No
     return response.embeddings[0].values
 
 
+@observe(as_type="embedding", name="google_embeddings")
 def get_embeddings(model: str, texts: list[str], kind: str = "document", title: str | None = None) -> list[list[float]]:
     """Batch version. Each text is wrapped in its own Content,
     otherwise gemini-embedding returns a single aggregated vector."""

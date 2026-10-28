@@ -1,6 +1,6 @@
 # AI Knowledge Assistant
 
-> Day 27 SQL as an Agent Tool and Memory
+> Day 30 — Observability
 
 ## Local run
 

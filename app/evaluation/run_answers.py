@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from app.core.observability import flush_tracing, init_tracing
 from app.domain.chat import ChatHistory, ChatMessage
 from app.evaluation.run_retrieval import load
 from app.rag.pipeline import ask
@@ -29,6 +30,7 @@ def check(q: dict, result: dict) -> bool:
 
 
 def main() -> None:
+    init_tracing()
     items = load(GOLDEN_PATH)
     rows = []
     for q in items:
@@ -41,6 +43,7 @@ def main() -> None:
         print(f"{q['id']} {q['category']:16} ok={int(ok)}{flag}")
     Path(RESULTS_PATH).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nsaved {len(rows)} rows to {RESULTS_PATH}")
+    flush_tracing()
 
 
 if __name__ == "__main__":

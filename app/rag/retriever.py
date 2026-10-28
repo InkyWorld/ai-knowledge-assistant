@@ -1,3 +1,4 @@
+from langfuse import observe
 from qdrant_client.http import models
 
 from app.core.clients import get_qdrant
@@ -42,6 +43,7 @@ def _search(query: str, document_type: str | None, fetch_limit: int) -> list[Ret
     ]
 
 
+@observe(as_type="retriever", name="retrieve", capture_input=False, capture_output=False)
 def retrieve(
     query: str,
     search_limit: int = 10,
